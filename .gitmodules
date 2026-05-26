@@ -1,10 +1,10 @@
 [submodule "frida-gum"]
 	path = subprojects/frida-gum
-	url = git@haichecker.github.com:HaiChecker/frida-gum.git
+	url = git@github.com:HaiChecker/frida-gum.git
 	branch = feature/stealth-anti-detection
 [submodule "frida-core"]
 	path = subprojects/frida-core
-	url = git@haichecker.github.com:HaiChecker/frida-core.git
+	url = git@github.com:HaiChecker/frida-core.git
 	branch = feature/stealth-anti-detection
 [submodule "frida-python"]
 	path = subprojects/frida-python
