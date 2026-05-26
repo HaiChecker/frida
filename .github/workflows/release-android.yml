@@ -45,15 +45,14 @@ jobs:
             --with-stealth-thread-main="HwBinder:1" \
             --with-stealth-thread-gadget=RenderThread \
             --with-stealth-server-dir=com.android.providers.media \
-            --with-stealth-magic=deadbeefcafebabe \
-            -- -Dfrida-core:compat=disabled
+            --with-stealth-magic=deadbeefcafebabe
           make
 
       - name: Collect artifacts
         run: |
           mkdir -p dist
-          cp build/subprojects/frida-core/server/x-frida-server-android-${{ matrix.arch }} dist/ || \
-          cp build/subprojects/frida-core/server/media.codec dist/x-frida-server-android-${{ matrix.arch }}
+          cp build/subprojects/frida-core/server/frida-server \
+            dist/x-frida-server-android-${{ matrix.arch }}
 
       - name: Upload server artifact
         uses: actions/upload-artifact@v4
