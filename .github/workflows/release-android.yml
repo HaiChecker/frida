@@ -45,7 +45,8 @@ jobs:
             --with-stealth-thread-main="HwBinder:1" \
             --with-stealth-thread-gadget=RenderThread \
             --with-stealth-server-dir=com.android.providers.media \
-            --with-stealth-magic=deadbeefcafebabe
+            --with-stealth-magic=deadbeefcafebabe \
+            -- -Dfrida-core:compat=disabled
           make
 
       - name: Collect artifacts
