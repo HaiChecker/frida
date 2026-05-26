@@ -6,10 +6,12 @@ on:
       - '*'
   workflow_dispatch:
 
+env:
+  ANDROID_NDK_VERSION: r29
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    container: ghcr.io/frida/x-tools-linux-x86_64:latest
     strategy:
       matrix:
         arch: [arm64, arm]
@@ -19,6 +21,16 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+
+      - name: Set up NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: ${{ env.ANDROID_NDK_VERSION }}
+          add-to-path: false
+
+      - name: Add ANDROID_NDK_ROOT to environment
+        run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Build frida-server for Android ${{ matrix.arch }}
         run: |
@@ -50,7 +62,6 @@ jobs:
 
   build-python-linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/frida/x-tools-linux-x86_64:latest
     needs: build-android
     steps:
       - name: Check out repo
@@ -61,23 +72,23 @@ jobs:
 
       - name: Build frida-python wheel (linux)
         run: |
-          python tools/ensure-submodules.py frida-gum frida-core frida-python
+          python3 tools/ensure-submodules.py frida-gum frida-core frida-python
           cd subprojects/frida-python
           sed -i 's/name="frida"/name="x-frida"/' setup.py
           pip install --break-system-packages wheel setuptools
-          python setup.py bdist_wheel
+          python3 setup.py bdist_wheel
           mkdir -p /tmp/wheels
           cp dist/*.whl /tmp/wheels/
 
       - name: Build frida-tools wheel (linux)
         run: |
-          python tools/ensure-submodules.py frida-tools
+          python3 tools/ensure-submodules.py frida-tools
           cd subprojects/frida-tools
           sed -i 's/name="frida-tools"/name="x-frida-tools"/' setup.py
           sed -i 's/"frida>=/"x-frida>=/' setup.py
           sed -i 's/frida-/x-frida-/g' setup.py
           pip install --break-system-packages wheel setuptools
-          python setup.py bdist_wheel
+          python3 setup.py bdist_wheel
           cp dist/*.whl /tmp/wheels/
 
       - name: Upload Python wheels
