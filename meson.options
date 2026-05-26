@@ -63,3 +63,63 @@ option('frida_qml',
   value: 'disabled',
   description: 'Build QML bindings',
 )
+
+option('stealth_memfd_name',
+  type: 'string',
+  value: 'jit-cache',
+  description: 'memfd name in /proc/self/maps',
+)
+
+option('stealth_thread_js',
+  type: 'string',
+  value: 'Signal Catcher',
+  description: 'GumJS thread name',
+)
+
+option('stealth_server_name',
+  type: 'string',
+  value: 'media.codec',
+  description: 'Server binary name',
+)
+
+option('stealth_helper_name',
+  type: 'string',
+  value: 'media.extractor',
+  description: 'Helper binary name',
+)
+
+option('stealth_gadget_name',
+  type: 'string',
+  value: 'libhwui',
+  description: 'Gadget library name',
+)
+
+option('stealth_port',
+  type: 'integer',
+  value: 52173,
+  description: 'Control port',
+)
+
+option('stealth_thread_main',
+  type: 'string',
+  value: 'HwBinder:1',
+  description: 'Main thread name',
+)
+
+option('stealth_thread_gadget',
+  type: 'string',
+  value: 'RenderThread',
+  description: 'Gadget thread name',
+)
+
+option('stealth_server_dir',
+  type: 'string',
+  value: 'com.android.providers.media',
+  description: 'Server directory name',
+)
+
+option('stealth_magic',
+  type: 'string',
+  value: 'deadbeefcafebabe',
+  description: 'Magic bytes for auth',
+)

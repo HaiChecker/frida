@@ -12,11 +12,21 @@ gum_options = [
   'frida_version=' + meson.project_version(),
   'graft_tool=' + (get_option('graft_tool').disable_auto_if(is_cross_build).allowed() ? 'enabled' : 'disabled'),
   'gumjs=enabled',
+  'stealth_memfd_name=' + get_option('stealth_memfd_name'),
+  'stealth_thread_js=' + get_option('stealth_thread_js'),
 ]
 subproject('frida-gum', default_options: gum_options)
 
 core_options = [
   'frida_version=' + meson.project_version(),
+  'stealth_server_name=' + get_option('stealth_server_name'),
+  'stealth_helper_name=' + get_option('stealth_helper_name'),
+  'stealth_gadget_name=' + get_option('stealth_gadget_name'),
+  'stealth_port=' + get_option('stealth_port').to_string(),
+  'stealth_thread_main=' + get_option('stealth_thread_main'),
+  'stealth_thread_gadget=' + get_option('stealth_thread_gadget'),
+  'stealth_server_dir=' + get_option('stealth_server_dir'),
+  'stealth_magic=' + get_option('stealth_magic'),
 ]
 core_options += 'gadget=' + (get_option('gadget').disable_auto_if(not is_cross_build).allowed() ? 'enabled' : 'disabled')
 foreach component : ['server', 'portal', 'inject']

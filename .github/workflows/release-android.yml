@@ -24,16 +24,16 @@ jobs:
         run: |
           python tools/ensure-submodules.py frida-gum frida-core
           ./configure --host=android-${{ matrix.arch }} \
-            -Dstealth_memfd_name=jit-cache \
-            -Dstealth_thread_js="Signal Catcher" \
-            -Dstealth_server_name=media.codec \
-            -Dstealth_helper_name=media.extractor \
-            -Dstealth_gadget_name=libhwui \
-            -Dstealth_port=52173 \
-            -Dstealth_thread_main="HwBinder:1" \
-            -Dstealth_thread_gadget=RenderThread \
-            -Dstealth_server_dir=com.android.providers.media \
-            -Dstealth_magic=deadbeefcafebabe
+            --with-stealth-memfd-name=jit-cache \
+            --with-stealth-thread-js="Signal Catcher" \
+            --with-stealth-server-name=media.codec \
+            --with-stealth-helper-name=media.extractor \
+            --with-stealth-gadget-name=libhwui \
+            --with-stealth-port=52173 \
+            --with-stealth-thread-main="HwBinder:1" \
+            --with-stealth-thread-gadget=RenderThread \
+            --with-stealth-server-dir=com.android.providers.media \
+            --with-stealth-magic=deadbeefcafebabe
           make
 
       - name: Collect artifacts
