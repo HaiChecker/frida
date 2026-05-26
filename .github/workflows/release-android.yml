@@ -84,9 +84,9 @@ jobs:
         run: |
           python3 tools/ensure-submodules.py frida-tools
           cd subprojects/frida-tools
+          sed -i 's/"frida >= /"x-frida >= /' setup.py
+          sed -i 's/"frida-\(.*\) = /"x-frida-\1 = /g' setup.py
           sed -i 's/name="frida-tools"/name="x-frida-tools"/' setup.py
-          sed -i 's/"frida>=/"x-frida>=/' setup.py
-          sed -i 's/frida-/x-frida-/g' setup.py
           pip install --break-system-packages wheel setuptools
           python3 setup.py bdist_wheel
           cp dist/*.whl /tmp/wheels/
@@ -126,14 +126,7 @@ jobs:
 
       - name: Build frida-tools wheel (macOS)
         run: |
-          python tools/ensure-submodules.py frida-tools
-          cd subprojects/frida-tools
-          sed -i '' 's/name="frida-tools"/name="x-frida-tools"/' setup.py
-          sed -i '' 's/"frida>=/"x-frida>=/' setup.py
-          sed -i '' 's/frida-/x-frida-/g' setup.py
-          pip install wheel setuptools
-          python setup.py bdist_wheel
-          cp dist/*.whl /tmp/wheels/
+          echo "frida-tools is pure Python (py3-none-any), built in linux job"
 
       - name: Upload Python wheels
         uses: actions/upload-artifact@v4
