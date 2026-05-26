@@ -1,0 +1,146 @@
+name: Release Android
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    container: ghcr.io/frida/x-tools-linux-x86_64:latest
+    strategy:
+      matrix:
+        arch: [arm64, arm]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build frida-server for Android ${{ matrix.arch }}
+        run: |
+          python tools/ensure-submodules.py frida-gum frida-core
+          ./configure --host=android-${{ matrix.arch }} \
+            -Dstealth_memfd_name=jit-cache \
+            -Dstealth_thread_js="Signal Catcher" \
+            -Dstealth_server_name=media.codec \
+            -Dstealth_helper_name=media.extractor \
+            -Dstealth_gadget_name=libhwui \
+            -Dstealth_port=52173 \
+            -Dstealth_thread_main="HwBinder:1" \
+            -Dstealth_thread_gadget=RenderThread \
+            -Dstealth_server_dir=com.android.providers.media \
+            -Dstealth_magic=deadbeefcafebabe
+          make
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist
+          cp build/subprojects/frida-core/server/x-frida-server-android-${{ matrix.arch }} dist/ || \
+          cp build/subprojects/frida-core/server/media.codec dist/x-frida-server-android-${{ matrix.arch }}
+
+      - name: Upload server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-frida-server-android-${{ matrix.arch }}
+          path: dist/
+
+  build-python-linux:
+    runs-on: ubuntu-latest
+    container: ghcr.io/frida/x-tools-linux-x86_64:latest
+    needs: build-android
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build frida-python wheel (linux)
+        run: |
+          python tools/ensure-submodules.py frida-gum frida-core frida-python
+          cd subprojects/frida-python
+          sed -i 's/name="frida"/name="x-frida"/' setup.py
+          pip install --break-system-packages wheel setuptools
+          python setup.py bdist_wheel
+          mkdir -p /tmp/wheels
+          cp dist/*.whl /tmp/wheels/
+
+      - name: Build frida-tools wheel (linux)
+        run: |
+          python tools/ensure-submodules.py frida-tools
+          cd subprojects/frida-tools
+          sed -i 's/name="frida-tools"/name="x-frida-tools"/' setup.py
+          sed -i 's/"frida>=/"x-frida>=/' setup.py
+          sed -i 's/frida-/x-frida-/g' setup.py
+          pip install --break-system-packages wheel setuptools
+          python setup.py bdist_wheel
+          cp dist/*.whl /tmp/wheels/
+
+      - name: Upload Python wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels-linux
+          path: /tmp/wheels/
+
+  build-python-macos:
+    runs-on: macos-latest
+    needs: build-android
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build frida-python wheel (macOS)
+        run: |
+          python tools/ensure-submodules.py frida-gum frida-core frida-python
+          cd subprojects/frida-python
+          sed -i '' 's/name="frida"/name="x-frida"/' setup.py
+          pip install wheel setuptools
+          python setup.py bdist_wheel
+          mkdir -p /tmp/wheels
+          cp dist/*.whl /tmp/wheels/
+
+      - name: Build frida-tools wheel (macOS)
+        run: |
+          python tools/ensure-submodules.py frida-tools
+          cd subprojects/frida-tools
+          sed -i '' 's/name="frida-tools"/name="x-frida-tools"/' setup.py
+          sed -i '' 's/"frida>=/"x-frida>=/' setup.py
+          sed -i '' 's/frida-/x-frida-/g' setup.py
+          pip install wheel setuptools
+          python setup.py bdist_wheel
+          cp dist/*.whl /tmp/wheels/
+
+      - name: Upload Python wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels-macos
+          path: /tmp/wheels/
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-android, build-python-linux, build-python-macos]
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
