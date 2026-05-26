@@ -134,9 +134,43 @@ jobs:
           name: python-wheels-macos
           path: /tmp/wheels/
 
+  build-python-windows:
+    runs-on: windows-latest
+    needs: build-android
+    strategy:
+      matrix:
+        arch: [x86_64]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build frida-python wheel (Windows)
+        run: |
+          python tools/ensure-submodules.py frida-gum frida-core frida-python
+          cd subprojects\frida-python
+          (Get-Content setup.py) -replace 'name="frida"', 'name="x-frida"' | Set-Content setup.py
+          pip install wheel setuptools
+          python setup.py bdist_wheel
+          mkdir C:\wheels
+          Copy-Item dist\*.whl C:\wheels\
+
+      - name: Upload Python wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels-windows-${{ matrix.arch }}
+          path: C:\wheels\
+
   release:
     runs-on: ubuntu-latest
-    needs: [build-android, build-python-linux, build-python-macos]
+    needs: [build-android, build-python-linux, build-python-macos, build-python-windows]
     permissions:
       contents: write
     steps:
