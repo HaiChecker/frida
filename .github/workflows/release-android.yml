@@ -113,6 +113,8 @@ jobs:
           python-version: '3.12'
 
       - name: Build frida-python wheel (macOS)
+        env:
+          MACOS_CERTID: "-"
         run: |
           python tools/ensure-submodules.py frida-gum frida-core frida-python
           cd subprojects/frida-python
