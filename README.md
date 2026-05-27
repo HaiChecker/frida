@@ -1,62 +1,70 @@
-# Frida
+# x-frida
 
-Dynamic instrumentation toolkit for developers, reverse-engineers, and security
-researchers. Learn more at [frida.re](https://frida.re/).
+Stealth-patched Frida build for bypassing RiskEngine and similar Android anti-tampering SDKs.
 
-Two ways to install
-===================
+## Quick Install
 
-## 1. Install from prebuilt binaries
+```bash
+# Install from release wheels
+pip install x-frida
+pip install x-frida-tools
+```
 
-This is the recommended way to get started. All you need to do is:
+Or download wheels from [Releases](../../releases) and install locally:
 
-    pip install frida-tools # CLI tools
-    pip install frida       # Python bindings
-    npm install frida       # Node.js bindings
+```bash
+pip install x_frida-*.whl
+pip install x_frida_tools-*.whl
+```
 
-You may also download pre-built binaries for various operating systems from
-Frida's [releases](https://github.com/frida/frida/releases) page on GitHub.
+## Android Server Deployment
 
-## 2. Build your own binaries
+```bash
+# Push server to device (renamed to media.codec for stealth)
+adb push x-frida-server-android-arm64 /data/local/tmp/media.codec
+adb shell "su -c 'chmod 755 /data/local/tmp/media.codec && /data/local/tmp/media.codec &'"
+```
 
-Run:
+## Usage
 
-    make
+```bash
+# Connect to stealth server (port 52173)
+x-frida -H 127.0.0.1:52173 -p <PID> -l script.js
+x-frida-ps -H 127.0.0.1:52173
+x-frida-trace -H 127.0.0.1:52173 -p <PID> -i "open"
+```
 
-You may also invoke `./configure` first if you want to specify a `--prefix`, or
-any other options.
+## What's Different
 
-### CLI tools
+| Feature | Original Frida | x-frida |
+|---------|---------------|---------|
+| Server name | frida-server | media.codec |
+| Helper name | frida-helper | media.extractor |
+| Gadget name | frida-gadget.so | libhwui.so |
+| Port | 27042 | 52173 |
+| Thread names | frida-main-loop, gum-js-loop | HwBinder:1, Signal Catcher |
+| memfd name | (anonymous) | jit-cache |
+| /proc maps | frida-agent-*.so | no literal pool traces |
+| Auth | none | magic bytes (deadbeefcafebabe) |
 
-For running the Frida CLI tools, e.g. `frida`, `frida-ls-devices`, `frida-ps`,
-`frida-kill`, `frida-trace`, `frida-discover`, etc., you need a few packages:
+## Build from Source
 
-    pip install colorama prompt-toolkit pygments websockets
-
-### Apple OSes
-
-First make a trusted code-signing certificate. If you have already used Xcode
-before, chances are you already have an Apple development certificate.
-You can check it with the following command:
-
-    security find-identity -v -p codesigning
-
-Which will return the certificate in the following format:
-
-    1) XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX "Apple Development: user@mail.com (YYYYYYYYYY)"
-
-If you do not have a certificate, follow this guide: 
-https://help.apple.com/xcode/mac/current/#/dev154b28f09.
-
-Next export the name of your certificate to relevant environment
-variables, and run `make`:
-
-    export MACOS_CERTID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export IOS_CERTID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export WATCHOS_CERTID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export TVOS_CERTID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    make
+```bash
+# Android server
+./configure --host=android-arm64 \
+  --with-stealth-memfd-name=jit-cache \
+  --with-stealth-thread-js="Signal Catcher" \
+  --with-stealth-server-name=media.codec \
+  --with-stealth-helper-name=media.extractor \
+  --with-stealth-gadget-name=libhwui \
+  --with-stealth-port=52173 \
+  --with-stealth-thread-main="HwBinder:1" \
+  --with-stealth-thread-gadget=RenderThread \
+  --with-stealth-server-dir=com.android.providers.media \
+  --with-stealth-magic=deadbeefcafebabe
+make
+```
 
 ## Learn more
 
-Have a look at our [documentation](https://frida.re/docs/home/).
+Have a look at Frida's [documentation](https://frida.re/docs/home/).
