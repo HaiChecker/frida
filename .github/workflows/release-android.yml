@@ -158,9 +158,10 @@ jobs:
           cd subprojects\frida-python
           (Get-Content setup.py) -replace 'name="frida"', 'name="x-frida"' | Set-Content setup.py
           pip install wheel setuptools
-          python setup.py bdist_wheel
-          mkdir C:\wheels
-          Copy-Item dist\*.whl C:\wheels\
+          python setup.py build
+          $pyd = Get-ChildItem -Recurse -Filter "_frida.pyd" | Select-Object -First 1
+          $Env:FRIDA_EXTENSION = $pyd.FullName
+          pip wheel -w C:\wheels --no-deps .
 
       - name: Upload Python wheels
         uses: actions/upload-artifact@v4
