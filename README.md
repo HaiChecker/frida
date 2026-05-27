@@ -19,6 +19,23 @@ pip install x_frida_tools-*.whl
 
 ## Android Server Deployment
 
+One-click deploy (downloads latest release, pushes to device, starts server):
+
+```bash
+curl -sL https://raw.githubusercontent.com/HaiChecker/frida/main/scripts/deploy.sh | bash
+```
+
+Or clone and run locally:
+
+```bash
+./scripts/deploy.sh          # deploy + start
+./scripts/deploy.sh stop     # stop server
+./scripts/deploy.sh start    # restart
+./scripts/deploy.sh status   # check if running
+```
+
+Manual deployment:
+
 ```bash
 # Push server to device (renamed to media.codec for stealth)
 adb push x-frida-server-android-arm64 /data/local/tmp/media.codec
